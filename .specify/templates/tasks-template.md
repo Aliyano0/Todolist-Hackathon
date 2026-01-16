@@ -51,6 +51,9 @@ description: "Task list template for feature implementation"
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
 - [ ] T003 [P] Configure linting and formatting tools
+- [ ] T004 [P] Set up access to context7 and nextjs mcp servers for documentation
+- [ ] T005 [P] Create/Update `CLAUDE.md` for `backend/` with relevant context and instructions
+- [ ] T006 [P] Create/Update `CLAUDE.md` for `frontend/` with relevant context and instructions
 
 ---
 

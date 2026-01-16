@@ -185,7 +185,17 @@ This separation enables easy testing and future evolution (e.g., adding persiste
 ## Phase Roadmap
 
 - **Phase 1**: In-memory console app (current)
-- **Phase 2**: Add file-based persistence
-- **Phase 3**: REST API
-- **Phase 4**: Web UI
-- **Phase 5**: Database persistence
+- **Phase 2**: Multi-user web application with persistent storage (ongoing)
+  - Backend: FastAPI with Python 3.13+
+  - Frontend: Next.js 16.1 with App Router
+  - Database: Neon Serverless PostgreSQL with SQLModel ORM
+  - Authentication: Better Auth with JWT integration
+- **Phase 3**: Enhanced features and scalability
+- **Phase 4**: Mobile application
+- **Phase 5**: Advanced analytics and insights
+
+## Documentation Structure
+
+- **Root CLAUDE.md**: Global instructions applicable to the entire project
+- **Backend CLAUDE.md**: Context-specific instructions for backend development
+- **Frontend CLAUDE.md**: Context-specific instructions for frontend development

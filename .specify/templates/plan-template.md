@@ -31,7 +31,12 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] Verify documentation-first approach using MCP servers and Context7
+- [ ] Confirm adherence to clean architecture principles
+- [ ] Validate tech stack compliance with specified technologies
+- [ ] Ensure TDD workflow will be followed
+- [ ] Confirm multi-user authentication & authorization requirements
+- [ ] Ensure `CLAUDE.md` files exist for each major component (`backend/`, `frontend/`) and adhere to context-specific guidelines
 
 ## Project Structure
 

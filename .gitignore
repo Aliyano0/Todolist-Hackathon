@@ -26,7 +26,7 @@ venv/
 ENV/
 env/
 .env/
-
+.env
 # IDEs
 .vscode/
 .idea/
@@ -53,3 +53,6 @@ cover/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
+folder-structure.md
