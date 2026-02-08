@@ -27,7 +27,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
-  signOut: () => void;
+  signOut: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -98,10 +98,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await signIn(email, password);
   };
 
-  const signOut = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('access_token');
+  const signOut = async () => {
+    try {
+      // Call backend logout endpoint (optional for stateless JWT, but good for logging)
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+      // Continue with client-side logout even if API call fails
+    } finally {
+      // Clear client-side state
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('access_token');
+
+      // Redirect to login page
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
   };
 
   return (

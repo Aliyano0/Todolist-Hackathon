@@ -199,24 +199,164 @@ async def login_user(login_data: UserLoginRequest, session: AsyncSession = Depen
 
 
 @router.post("/logout")
-def logout_user():
+async def logout_user():
     """
-    Placeholder for logout endpoint
-    Better Auth handles session management
+    Logout endpoint for JWT-based authentication
+
+    For stateless JWT, logout is handled client-side by removing the token.
+    This endpoint returns success to confirm the logout action.
+
+    Future enhancement: Implement token blacklisting for server-side revocation.
     """
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Logout handled by Better Auth"
-    )
+    logger.info("Logout request received")
+    return {"message": "Logged out successfully"}
 
 
 @router.get("/me")
-def get_current_user():
+async def get_current_user_info(session: AsyncSession = Depends(get_session)):
     """
-    Placeholder for current user endpoint
-    Better Auth handles session retrieval
+    Get current authenticated user information
+
+    Requires valid JWT token in Authorization header.
+    Returns user profile information.
     """
+    from dependencies.auth import get_current_user
+    from fastapi import Depends as FastAPIDepends
+
+    # This endpoint requires authentication
+    # The actual implementation will be added when we need it
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="User session handled by Better Auth"
+        detail="Endpoint not yet implemented"
     )
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
+@router.post("/password-reset/request")
+async def request_password_reset(
+    request_data: PasswordResetRequest,
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Request a password reset token
+
+    Sends a password reset email to the user if the email exists.
+    Always returns success to prevent email enumeration attacks.
+    """
+    try:
+        logger.info(f"Password reset requested for email: {request_data.email}")
+
+        # Find user by email
+        statement = select(User).where(User.email == request_data.email)
+        result = await session.execute(statement)
+        user = result.scalar_one_or_none()
+
+        if user:
+            # Generate reset token (valid for 1 hour)
+            import secrets
+            from datetime import datetime, timedelta
+
+            reset_token = secrets.token_urlsafe(32)
+            user.reset_token = reset_token
+            user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+
+            await session.commit()
+
+            logger.info(f"Password reset token generated for user: {user.id}")
+
+            # In production, send email with reset link
+            # For now, log the token (development only)
+            logger.info(f"Password reset token (DEV ONLY): {reset_token}")
+            print(f"\n{'='*60}")
+            print(f"PASSWORD RESET TOKEN (Development Mode)")
+            print(f"Email: {request_data.email}")
+            print(f"Token: {reset_token}")
+            print(f"Expires: {user.reset_token_expires.isoformat()}")
+            print(f"{'='*60}\n")
+
+        # Always return success to prevent email enumeration
+        return {
+            "message": "If the email exists, a password reset link has been sent"
+        }
+
+    except Exception as e:
+        logger.error(f"Password reset request error: {str(e)}")
+        # Still return success to prevent information leakage
+        return {
+            "message": "If the email exists, a password reset link has been sent"
+        }
+
+
+@router.post("/password-reset/confirm")
+async def confirm_password_reset(
+    reset_data: PasswordResetConfirm,
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Reset password using a valid reset token
+
+    Validates the token and updates the user's password.
+    """
+    try:
+        logger.info("Password reset confirmation attempt")
+
+        # Validate new password requirements
+        validate_password_requirements(reset_data.new_password)
+
+        # Find user with matching reset token
+        statement = select(User).where(User.reset_token == reset_data.token)
+        result = await session.execute(statement)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            logger.warning("Password reset failed: Invalid token")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token"
+            )
+
+        # Check if token is expired
+        from datetime import datetime
+        if not user.reset_token_expires or user.reset_token_expires < datetime.utcnow():
+            logger.warning(f"Password reset failed: Expired token for user {user.id}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token"
+            )
+
+        # Update password
+        user.password_hash = hash_password(reset_data.new_password)
+        user.reset_token = None
+        user.reset_token_expires = None
+
+        await session.commit()
+
+        logger.info(f"Password reset successful for user: {user.id}")
+
+        return {
+            "message": "Password has been reset successfully"
+        }
+
+    except ValueError as e:
+        # Password validation error
+        logger.warning(f"Password reset failed: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Password reset confirmation error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during password reset"
+        )

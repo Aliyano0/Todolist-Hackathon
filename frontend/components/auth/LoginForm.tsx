@@ -213,6 +213,14 @@ const LoginForm = () => {
           </div>
         </div>
 
+        <div className="flex items-center justify-between">
+          <div className="text-sm">
+            <a href="/forgot-password" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
+              Forgot your password?
+            </a>
+          </div>
+        </div>
+
         <div>
           <button
             type="submit"
