@@ -19,6 +19,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual environments
 .venv/
@@ -26,26 +27,79 @@ venv/
 ENV/
 env/
 .env/
+
+# Environment variables
 .env
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+todo_backend.db
+
+# UV (Python package manager)
+.uv/
+uv.lock
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
 cover/
+.tox/
+.hypothesis/
+*.cover
+.cache
+nosetests.xml
+coverage.xml
+*.coveragerc
 
-# UV
-.uv/
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# OS
+# Next.js
+.next/
+out/
+.vercel
+.turbo
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/
+
+# OS files
 .DS_Store
 .DS_Store?
 ._*
@@ -53,6 +107,27 @@ cover/
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~.nib
+.lock-wscript
 
-folder-structure.md
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# Documentation (optional - uncomment if you don't want to track)
+# folder-structure.md
+
+# Claude Code specific
+.claude/
+
+# Misc
+.specify/cache/
