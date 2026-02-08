@@ -1,0 +1,222 @@
+"""
+Authentication API routes for JWT-based authentication
+
+This module provides registration and login endpoints.
+Uses custom JWT authentication with FastAPI.
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+from database.session import get_session
+from models.user import User
+from pydantic import BaseModel, EmailStr, Field
+from core.security.password import hash_password, verify_password
+import logging
+import re
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+# Request/Response schemas
+class UserRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=8)
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    email_verified: bool
+    created_at: str
+    updated_at: str
+
+
+def validate_password_requirements(password: str) -> None:
+    """
+    Validate password meets all requirements:
+    - At least 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one number
+    - At least one special character
+    """
+    errors = []
+
+    if len(password) < 8:
+        errors.append("Password must be at least 8 characters")
+
+    if not re.search(r'[A-Z]', password):
+        errors.append("Password must contain at least one uppercase letter")
+
+    if not re.search(r'[a-z]', password):
+        errors.append("Password must contain at least one lowercase letter")
+
+    if not re.search(r'[0-9]', password):
+        errors.append("Password must contain at least one number")
+
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        errors.append("Password must contain at least one special character")
+
+    if errors:
+        raise ValueError("; ".join(errors))
+
+
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register_user(user_data: UserRegisterRequest, session: AsyncSession = Depends(get_session)):
+    """
+    Register a new user with email and password
+
+    Password requirements:
+    - At least 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one number
+    - At least one special character
+    """
+    try:
+        logger.info(f"Registration attempt for email: {user_data.email}")
+
+        # Validate password requirements
+        validate_password_requirements(user_data.password)
+
+        # Check if user already exists
+        statement = select(User).where(User.email == user_data.email)
+        result = await session.execute(statement)
+        existing_user = result.scalar_one_or_none()
+
+        if existing_user:
+            logger.warning(f"Registration failed: Email already registered - {user_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
+        # Hash password
+        password_hash = hash_password(user_data.password)
+
+        # Create new user
+        new_user = User(
+            email=user_data.email,
+            password_hash=password_hash,
+            email_verified=False
+        )
+
+        session.add(new_user)
+        await session.commit()
+        await session.refresh(new_user)
+
+        logger.info(f"User registered successfully: {user_data.email} (user_id: {new_user.id})")
+
+        return UserResponse(
+            id=str(new_user.id),
+            email=new_user.email,
+            email_verified=new_user.email_verified,
+            created_at=new_user.created_at.isoformat(),
+            updated_at=new_user.updated_at.isoformat()
+        )
+
+    except ValueError as e:
+        # Password validation error
+        logger.warning(f"Registration failed for {user_data.email}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error for {user_data.email}: {str(e)}")
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during registration"
+        )
+
+
+class UserLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+@router.post("/login")
+async def login_user(login_data: UserLoginRequest, session: AsyncSession = Depends(get_session)):
+    """
+    Authenticate user and return user information with JWT token
+
+    Accepts email and password in request body, verifies credentials,
+    and returns user information with JWT access token.
+    """
+    try:
+        logger.info(f"Login attempt for email: {login_data.email}")
+
+        # Find user by email
+        statement = select(User).where(User.email == login_data.email)
+        result = await session.execute(statement)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            logger.warning(f"Login failed: User not found - {login_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password"
+            )
+
+        # Verify password
+        if not verify_password(login_data.password, user.password_hash):
+            logger.warning(f"Login failed: Invalid password - {login_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password"
+            )
+
+        logger.info(f"Login successful for email: {login_data.email} (user_id: {user.id})")
+
+        # Create JWT token for the user
+        from core.security.jwt import create_access_token
+        token = create_access_token({"sub": str(user.id), "email": user.email})
+
+        return {
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "email_verified": user.email_verified
+            },
+            "access_token": token,
+            "token_type": "bearer"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error for {login_data.email}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during login"
+        )
+
+
+@router.post("/logout")
+def logout_user():
+    """
+    Placeholder for logout endpoint
+    Better Auth handles session management
+    """
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Logout handled by Better Auth"
+    )
+
+
+@router.get("/me")
+def get_current_user():
+    """
+    Placeholder for current user endpoint
+    Better Auth handles session retrieval
+    """
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="User session handled by Better Auth"
+    )

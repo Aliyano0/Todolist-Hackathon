@@ -212,6 +212,44 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 ## Active Technologies
 - Python 3.13+ + None (standard library only) (001-todo-console-app)
 - In-memory dict/list (session-only) (001-todo-console-app)
+- Python 3.13+ (as specified in constitution) + FastAPI, SQLModel, python-jose[cryptography], uvicorn, psycopg2-binary (002-todo-backend-api)
+- Neon Serverless PostgreSQL database (postgres version 17) with SQLModel ORM (002-todo-backend-api)
+- TypeScript 5.0+ for frontend, Python 3.13+ for backend + Next.js 16+, Shadcn/UI, TailwindCSS, Better Auth, FastAPI, SQLModel (003-nextjs-frontend)
+- Neon Serverless PostgreSQL database (postgres version 17) via SQLModel ORM (003-nextjs-frontend)
+- Python 3.13+ (backend), TypeScript 5.0+ (frontend) + Better Auth, FastAPI, Next.js 16+, SQLModel, Neon Serverless PostgreSQL (005-auth-system-redef)
+- Python 3.13+ + FastAPI, SQLModel, uvicorn, psycopg2-binary, python-jose[cryptography] (008-backend-cleanup-rebuild)
+- Neon Serverless PostgreSQL database with SQLModel ORM (008-backend-cleanup-rebuild)
+- TypeScript 5.0+ for frontend, Next.js 16+ + Next.js 16+ with App Router, Shadcn UI, Tailwind CSS, Better Auth, React 19 (010-frontend-structure-resolution)
+- N/A (frontend only) (010-frontend-structure-resolution)
+- TypeScript 5.0+ for frontend, Next.js 16.1+ + Next.js 16.1 with App Router, Shadcn UI, Tailwind CSS, React 19 (011-frontend-rebuild)
+- TypeScript 5.0+ for frontend, Next.js 16.1+ + Next.js 16.1 with App Router, Shadcn UI, Tailwind CSS, React 19, FastAPI backend (012-frontend-fixes)
+- N/A (frontend only - data storage handled by backend API) (012-frontend-fixes)
+- TypeScript 5.0+ for frontend, Python 3.13+ for backend + Next.js 16.1+, Shadcn UI, Tailwind CSS, FastAPI, Motion for animations (015-todo-enhancement)
+- Browser local storage with JWT token authentication (015-todo-enhancement)
+- Python 3.13+ for backend, TypeScript 5.0+ for frontend + FastAPI, SQLModel, Neon Serverless PostgreSQL with priority and category fields in todotask table, Next.js 16.1+ (016-backend-db-fix)
+- Python 3.13+ for backend, TypeScript 5.0+ for frontend + FastAPI, SQLModel, Neon Serverless PostgreSQL (with asyncpg), Better Auth, Next.js 16.1+, python-jose[cryptography] (017-better-auth-integration)
+- Neon Serverless PostgreSQL (postgres version 17) with SQLModel ORM and asyncpg driver (018-better-auth-jwt)
 
 ## Recent Changes
 - 001-todo-console-app: Added Python 3.13+ + None (standard library only)
+- 002-todo-backend-api: Added FastAPI backend with SQLModel ORM, Neon PostgreSQL integration
+- 003-nextjs-frontend: Added Next.js frontend with Shadcn UI, integrated with backend API
+- 005-auth-system-redef: Redefined authentication system using Better Auth instead of custom JWT implementation
+- 008-backend-cleanup-rebuild: Implemented FastAPI backend with SQLModel ORM, Neon PostgreSQL integration, single-user implementation without authentication
+- 010-frontend-structure-resolution: Established Next.js 16+ project structure with proper component organization, Shadcn UI integration
+- 011-frontend-rebuild: Implemented Next.js 16.1+ frontend with App Router, Shadcn UI components, proper TypeScript typing
+- 012-frontend-fixes: Fixed frontend components, improved UI/UX, enhanced API integration with backend
+- 015-todo-enhancement: Enhanced UI with animations and improved user experience
+- 016-backend-db-fix: Added priority and category columns to todotask table, implemented database migration script
+- 017-better-auth-integration: Implemented comprehensive JWT-based authentication system with:
+  - User registration with email verification
+  - JWT access tokens (24h) and refresh tokens (7d) with sliding expiration
+  - Token storage in database with revocation support
+  - Password reset functionality with secure tokens
+  - Logout and logout-all-sessions endpoints
+  - Comprehensive edge case handling and validation
+  - Authentication event logging for security monitoring
+  - Frontend validation with password strength indicator
+  - Protected routes with user isolation (/api/{user_id}/tasks pattern)
+  - Comprehensive authentication test suite (27 test cases)
+  - Database migration for authentication_token table

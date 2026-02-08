@@ -1,10 +1,9 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 2.1.0 → 2.2.0 (minor update - added documentation context management)
-Added sections: Context-Specific Documentation with CLAUDE.md principle
-Modified principles: Added new principle for CLAUDE.md file usage and context management
-Templates requiring updates: ✅ Updated (added documentation context management to relevant templates)
+Version change: 2.3.0 → 2.4.0 (minor update - Better Auth JWT integration)
+Modified principles: Updated authentication section to reflect Better Auth-centric JWT authentication with stateless backend verification
+Templates requiring updates: ✅ Updated (authentication simplified to Better Auth + JWT verification model)
 -->
 
 # The Evolution of Todo - Phase II: Multi-User Web Application with Persistent Storage Constitution
@@ -62,7 +61,7 @@ modern UX while maintaining the same core functionality.
 
 Phase II MUST implement persistent storage:
 - Use Neon Serverless PostgreSQL database (postgres version 17) for data storage
-- Use SQLModel ORM for database interactions
+- Use SQLModel ORM with asyncpg driver for database interactions
 - Data persists beyond user sessions
 - Database schema supports multi-user data isolation
 
@@ -75,7 +74,7 @@ The persistence mandate forces proper data modeling and repository patterns.
 Phase II MUST use the specified technology stack:
 - Backend: FastAPI with Python 3.13+ in UV venv environment
 - Frontend: Next.js 16.1 with App Router and with Shadcn UI and tailwindcss
-- Database: Neon Serverless PostgreSQL with SQLModel ORM
+- Database: Neon Serverless PostgreSQL with SQLModel ORM and asyncpg driver
 - Authentication: Better Auth with JWT token integration
 - Package management: UV for Python dependencies
 
@@ -103,16 +102,61 @@ Each major component (e.g., `backend/`, `frontend/`) MUST contain its own `CLAUD
 
 ### IX. Multi-User Authentication & Authorization
 
-Phase II MUST implement secure multi-user functionality:
-- User signup and signin via Better Auth
-- JWT token integration between frontend and backend
-- API routes filtered by authenticated user ID
-- Proper data isolation between users
-- Secure session management
+Phase II MUST implement secure multi-user functionality using Better Auth with JWT:
 
-**Rationale**: Multi-user support is essential for a production-ready web application.
-Proper authentication and authorization prevent data leakage between users and ensure
-security compliance.
+**Authentication Architecture:**
+- Better Auth (Next.js) is the ONLY authentication authority
+- Better Auth issues JWT tokens on user login
+- FastAPI backend NEVER issues tokens, only verifies them
+- Stateless authentication on backend (no token storage in database)
+- JWT tokens valid for 7 days with HS256 signing algorithm
+- Shared secret (BETTER_AUTH_SECRET) used by both frontend and backend
+
+**Authentication Features:**
+- User registration with email and password validation
+- User login with credential verification
+- JWT token issuance by Better Auth containing user_id (UUID), email, and expiration
+- Automatic token attachment to all API requests (Authorization: Bearer header)
+- User logout (client-side session clearing)
+- Session persistence for 7-day token validity period
+
+**Security Implementation:**
+- Password hashing using industry-standard algorithms (bcrypt)
+- Password requirements following industry standards (minimum length, complexity)
+- JWT signature verification using shared secret
+- Token expiry validation on every request
+- Input sanitization and validation at all layers
+- Proper error handling without exposing security details
+
+**Authorization & Data Isolation:**
+- All API routes require valid JWT token
+- User ID extracted from JWT token (sub claim) for authorization
+- API routes use user ID in path (/api/{user_id}/tasks) validated against token
+- User ID mismatch between token and path results in 403 Forbidden
+- Missing or invalid token results in 401 Unauthorized
+- Proper data isolation between users at database level
+- All database queries filtered by authenticated user_id
+- Cross-user data access always fails
+
+**Frontend Integration:**
+- Better Auth configuration with credentials provider and JWT plugin
+- Protected routes redirect unauthenticated users to login page
+- Login and registration pages with form validation
+- Automatic JWT attachment to all API requests via client interceptor
+- Clear error messages for authentication failures
+- Responsive design for all screen sizes
+
+**Database Schema:**
+- User model with UUID primary key, unique email, and password hash
+- Task model with UUID primary key and user_id foreign key
+- Referential integrity between tasks and users
+- Indexed fields for performance (email, user_id)
+
+**Rationale**: Multi-user support with Better Auth provides a robust, industry-standard
+authentication solution. The stateless JWT approach simplifies backend architecture while
+maintaining security. Better Auth handles token issuance complexity, allowing the backend
+to focus on verification and authorization. Proper data isolation prevents cross-user
+data leakage and ensures security compliance.
 
 ### X. Test-Driven Development (Non-Negotiable)
 
@@ -256,9 +300,9 @@ todolist-hackathon/
 - Python 3.13+ required for backend
 - Next.js 16+ with App Router for frontend
 - Use Shadcn UI components and tailwindcss for styling
-- Neon Serverless PostgreSQL for database
+- Neon Serverless PostgreSQL for database with asyncpg driver
 - Better Auth for authentication with JWT integration
-- SQLModel ORM for database interactions
+- SQLModel ORM for database interactions with asyncpg compatibility
 - Use context7 and nextjs mcp servers for documentation and code examples
 
 ### Process Constraints
@@ -347,4 +391,4 @@ All PRs and commits must verify constitution compliance. Violations must be
 documented in an ADR with explicit justification for why the constraint was
 intentionally violated.
 
-**Version**: 2.2.0 | **Ratified**: 2026-01-14 | **Last Amended**: 2026-01-16
+**Version**: 2.4.0 | **Ratified**: 2026-01-14 | **Last Amended**: 2026-02-08

@@ -7,22 +7,55 @@ A simple in-memory todo console application built with clean architecture princi
 - Add tasks with title and optional description
 - List all tasks with completion status indicators
 - View individual task details
-- Mark tasks as complete/incomplete
+- Mark tasks as complete/incomplete (bug fixed)
 - Update task title and/or description
 - Delete tasks
 - **Interactive Mode** - Menu-driven session for easy task management
+- **Modern UI Design** - Updated with modern color theme and smooth animations
+- **Priority Management** - Tasks can have priority levels (high, medium, low)
+- **Category Management** - Tasks can be categorized (work, personal, shopping, or custom)
+- **Advanced Filtering** - Sort and filter tasks by priority, category, and completion status
+- **Glowing Effects** - Animated buttons with glowing effects for better UX
 
 ## Requirements
 
-- Python 3.13+
+- Python 3.13+ (backend)
+- Node.js 18+ and npm/yarn/pnpm (frontend)
 - UV package manager
 
-## Installation
+## Backend Installation
 
 ```bash
 # Install the package in development mode
 uv pip install -e .
 ```
+
+## Frontend Installation
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
 
 ## Usage
 
